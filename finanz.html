@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Finanz-Manager Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #0e1117;
+            --surface:  #161b25;
+            --card:     #1c2333;
+            --border:   #2a3347;
+            --text:     #e8eaf0;
+            --muted:    #6b7a99;
+            --in:       #00d68f;
+            --out:      #ff5c78;
+            --save:     #4d9fff;
+            --accent:   #7c5cfc;
+            --warn:     #ffb347;
+        }
+
+```
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+        font-family: 'Syne', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 16px 12px 80px;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+        background: linear-gradient(135deg, #1c2333 0%, #0e1117 100%);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px 20px 18px;
+        margin-bottom: 16px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .header::before {
+        content: '';
+        position: absolute;
+        top: -60px; left: 50%;
+        transform: translateX(-50%);
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(124,92,252,0.18) 0%, transparent 70%);
+    }
+    .header-label { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .balance-val {
+        font-size: 2.8rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        display: block;
+        margin: 6px 0 4px;
+        transition: color 0.4s;
+    }
+    .header-date { font-size: 0.78rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+    /* summary bar */
+    .summary-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    .sum-item {
+        background: rgba(255,255,255,0.04);
+        border-radius: 10px;
+        padding: 8px 6px;
+        text-align: center;
+    }
+    .sum-item .sum-label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: block; }
+    .sum-item .sum-val { font-size: 0.92rem; font-weight: 700; font-family: 'DM Mono', monospace; margin-top: 2px; display: block; }
+
+    /* ─── TABS ─── */
+    .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 16px;
+        background: var(--surface);
+        border-radius: 12px;
+        padding: 5px;
+        border: 1px solid var(--border);
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 10px 6px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
+        font-family: 'Syne', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .tab-btn.active {
+        background: var(--card);
+        color: var(--text);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* ─── PANELS ─── */
+    .panel { display: none; animation: fadeIn 0.25s ease; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── CARDS ─── */
+    .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
+    .card-title {
+        font-size: 0.7rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .card-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+    .dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ─── INPUTS ─── */
+    .input-row { display: flex; gap: 8px; }
+    .input-field {
+        flex: 1;
+        padding: 12px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        font-family: 'Syne', sans-serif;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+        -webkit-appearance: none;
+    }
+    .input-field:focus { border-color: var(--accent); }
+    .input-field::placeholder { color: var(--muted); }
+    .input-field.small { flex: 0 0 100px; }
+
+    .btn-primary {
+        padding: 12px 18px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+        white-space: nowrap;
+    }
+    .btn-primary:active { transform: scale(0.97); opacity: 0.85; }
+
+    /* ─── FIX ITEMS ─── */
+    .fix-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        cursor: pointer;
+        user-select: none;
+        transition: opacity 0.2s;
+    }
+    .fix-item:last-child { border-bottom: none; }
+    .fix-item.done { opacity: 0.35; }
+
+    .custom-check {
+        width: 22px; height: 22px;
+        border-radius: 6px;
+        border: 2px solid var(--border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+    }
+    .fix-item.done .custom-check { border-color: var(--in); background: var(--in); }
+    .check-svg { opacity: 0; transition: opacity 0.15s; }
+    .fix-item.done .check-svg { opacity: 1; }
+
+    .fix-info { flex: 1; overflow: hidden; }
+    .fix-name { font-size: 0.92rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fix-day  { font-size: 0.7rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 1px; }
+
+    .fix-amount {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.92rem;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    /* ─── EXTRA ITEMS ─── */
+    .extra-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255,92,120,0.06);
+        border: 1px solid rgba(255,92,120,0.15);
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+    }
+    .extra-name { font-size: 0.88rem; color: var(--text); }
+    .extra-right { display: flex; align-items: center; gap: 10px; }
+    .extra-amt { font-family: 'DM Mono', monospace; font-size: 0.88rem; color: var(--out); }
+    .btn-del {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0 4px;
+        transition: color 0.15s;
+        line-height: 1;
+    }
+    .btn-del:hover { color: var(--out); }
+
+    /* ─── SETUP ─── */
+    .setup-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .setup-row:last-child { margin-bottom: 0; }
+
+    /* ─── PROGRESS BAR ─── */
+    .progress-wrap {
+        background: var(--surface);
+        border-radius: 20px;
+        height: 6px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+    .progress-bar {
+        height: 100%;
+        border-radius: 20px;
+        background: linear-gradient(90deg, var(--save), var(--accent));
+        transition: width 0.4s ease;
+    }
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 5px;
+        font-family: 'DM Mono', monospace;
+    }
+
+    /* ─── RESET ─── */
+    .btn-reset {
+        width: 100%;
+        padding: 15px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--muted);
+        font-family: 'Syne', sans-serif;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 8px;
+    }
+    .btn-reset:hover { border-color: var(--out); color: var(--out); }
+
+    /* empty state */
+    .empty { text-align: center; padding: 20px; color: var(--muted); font-size: 0.85rem; }
+</style>
+```
+
+</head>
+<body>
+
+<div style="max-width: 480px; margin: auto;">
+
+```
+<!-- HEADER -->
+<div class="header">
+    <span class="header-label">Verfügbares Geld</span>
+    <span class="balance-val" id="display-balance">0,00 €</span>
+    <span class="header-date" id="date-info">—</span>
+    <div class="summary-bar">
+        <div class="sum-item">
+            <span class="sum-label">Einnahmen</span>
+            <span class="sum-val" id="sum-in" style="color:var(--in)">0 €</span>
+        </div>
+        <div class="sum-item">
+            <span class="sum-label">Ausgaben</span>
+            <span class="sum-val" id="sum-out" style="color:var(--out)">0 €</span>
+        </div>
+        <div class="sum-item">
+            <span class="sum-label">Gespart</span>
+            <span class="sum-val" id="sum-save" style="color:var(--save)">0 €</span>
+        </div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="showTab('overview')">📊 Übersicht</button>
+    <button class="tab-btn" onclick="showTab('extras')">🛒 Einkäufe</button>
+    <button class="tab-btn" onclick="showTab('setup')">⚙️ Setup</button>
+</div>
+
+<!-- ═══ ÜBERSICHT ═══ -->
+<div class="panel active" id="tab-overview">
+
+    <!-- Einnahmen -->
+    <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--in)"></span> Einnahmen</div>
+        <div id="list-in"></div>
+    </div>
+
+    <!-- Fixkosten -->
+    <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--out)"></span> Fixkosten</div>
+        <div id="list-out"></div>
+    </div>
+
+    <!-- Sparen -->
+    <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--save)"></span> Sparen</div>
+        <div id="list-save"></div>
+        <div class="progress-wrap">
+            <div class="progress-bar" id="save-progress" style="width:0%"></div>
+        </div>
+        <div class="progress-label">
+            <span>Gespart</span>
+            <span id="save-percent">0%</span>
+        </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetAll()">↺ Monats-Reset — Häkchen &amp; Einkäufe löschen</button>
+</div>
+
+<!-- ═══ EINKÄUFE ═══ -->
+<div class="panel" id="tab-extras">
+    <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--out)"></span> Neuer Einkauf</div>
+        <div class="input-row">
+            <input class="input-field" type="text" id="extra-name" placeholder="Wo? (z.B. Rewe)">
+            <input class="input-field small" type="number" id="extra-amount" placeholder="€" inputmode="decimal">
+            <button class="btn-primary" onclick="addExtra()">+ Add</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--warn)"></span> Ausgaben-Liste</div>
+        <div id="extra-list"></div>
+    </div>
+</div>
+
+<!-- ═══ SETUP ═══ -->
+<div class="panel" id="tab-setup">
+    <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--accent)"></span> Planung</div>
+        <div class="setup-row">
+            <input class="input-field" type="number" id="start-balance" placeholder="Startbetrag €" oninput="updateAll()" inputmode="decimal">
+        </div>
+        <div class="setup-row">
+            <input class="input-field" type="date" id="date-picker" onchange="updateAll()">
+        </div>
+    </div>
+</div>
+```
+
+</div>
+
+<script>
+const fixData = [
+    { id: 1, cat: 'out',  day: 1,  title: "Miete, Garage, Strom",  amt: 1069 },
+    { id: 2, cat: 'out',  day: 1,  title: "Auto, Internet, Jetimi", amt: 397  },
+    { id: 3, cat: 'in',   day: 3,  title: "Kindergeld",             amt: 520  },
+    { id: 4, cat: 'save', day: 3,  title: "Notgroschen Transfer",   amt: 800  },
+    { id: 5, cat: 'in',   day: 13, title: "Lohn Frau",              amt: 600  },
+    { id: 6, cat: 'out',  day: 13, title: "1&1 Handyverträge",      amt: 100  },
+    { id: 7, cat: 'out',  day: 15, title: "HUK Versicherung",       amt: 100  },
+    { id: 8, cat: 'in',   day: 26, title: "Lohn Mann",              amt: 2534 },
+    { id: 9, cat: 'in',   day: 29, title: "Pflegegeld",             amt: 800  }
+];
+
+let extras = JSON.parse(localStorage.getItem('extras-list')) || [];
+
+function fmt(n) {
+    return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+function fmtShort(n) {
+    return Math.round(n).toLocaleString('de-DE') + ' €';
+}
+
+function updateAll() {
+    let balance = parseFloat(document.getElementById('start-balance').value) || 0;
+    let totalIn = 0, totalOut = 0, totalSave = 0;
+
+    const containers = {
+        in:   document.getElementById('list-in'),
+        out:  document.getElementById('list-out'),
+        save: document.getElementById('list-save')
+    };
+    Object.values(containers).forEach(c => c.innerHTML = '');
+
+    [...fixData].sort((a,b) => a.day - b.day).forEach(item => {
+        const isChecked = localStorage.getItem('checked-' + item.id) === 'true';
+        if (isChecked) {
+            if (item.cat === 'in')        { balance += item.amt; totalIn   += item.amt; }
+            else if (item.cat === 'out')  { balance -= item.amt; totalOut  += item.amt; }
+            else if (item.cat === 'save') { balance -= item.amt; totalSave += item.amt; }
+        }
+
+        const colorMap = { in: 'var(--in)', out: 'var(--out)', save: 'var(--save)' };
+        const sign     = item.cat === 'in' ? '+' : '−';
+        containers[item.cat].innerHTML += `
+            <div class="fix-item ${isChecked ? 'done' : ''}" onclick="toggle(${item.id})">
+                <div class="custom-check">
+                    <svg class="check-svg" width="12" height="9" viewBox="0 0 12 9" fill="none">
+                        <path d="M1 4L4.5 7.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="fix-info">
+                    <div class="fix-name">${item.title}</div>
+                    <div class="fix-day">Tag ${item.day}</div>
+                </div>
+                <div class="fix-amount" style="color:${colorMap[item.cat]}">${sign} ${item.amt} €</div>
+            </div>`;
+    });
+
+    // extras
+    const extraListEl = document.getElementById('extra-list');
+    if (extraListEl) {
+        extraListEl.innerHTML = '';
+        if (extras.length === 0) {
+            extraListEl.innerHTML = '<div class="empty">Noch keine Einkäufe eingetragen.</div>';
+        }
+        extras.forEach((ex, i) => {
+            balance  -= ex.amount;
+            totalOut += ex.amount;
+            extraListEl.innerHTML += `
+                <div class="extra-item">
+                    <span class="extra-name">${ex.name}</span>
+                    <div class="extra-right">
+                        <span class="extra-amt">− ${ex.amount.toFixed(2)} €</span>
+                        <button class="btn-del" onclick="delExtra(${i})">×</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // balance display
+    const disp = document.getElementById('display-balance');
+    disp.innerText = fmt(balance);
+    disp.style.color = balance < 0 ? 'var(--out)' : balance < 200 ? 'var(--warn)' : 'var(--in)';
+
+    // date
+    const dateVal = document.getElementById('date-picker').value;
+    if (dateVal) {
+        document.getElementById('date-info').innerText = 'Stand: ' +
+            new Date(dateVal).toLocaleDateString('de-DE', { day:'2-digit', month:'long', year:'numeric' });
+    }
+
+    // summary
+    document.getElementById('sum-in').innerText   = fmtShort(totalIn);
+    document.getElementById('sum-out').innerText  = fmtShort(totalOut);
+    document.getElementById('sum-save').innerText = fmtShort(totalSave);
+
+    // savings progress (goal: 800 = full)
+    const savingsGoal = 800;
+    const pct = Math.min(100, Math.round((totalSave / savingsGoal) * 100));
+    document.getElementById('save-progress').style.width = pct + '%';
+    document.getElementById('save-percent').innerText = pct + '%';
+}
+
+function addExtra() {
+    const nameEl = document.getElementById('extra-name');
+    const amtEl  = document.getElementById('extra-amount');
+    const amt    = parseFloat(amtEl.value);
+    if (amt > 0) {
+        extras.push({ name: nameEl.value.trim() || 'Einkauf', amount: amt });
+        localStorage.setItem('extras-list', JSON.stringify(extras));
+        nameEl.value = '';
+        amtEl.value  = '';
+        updateAll();
+    }
+}
+
+function delExtra(index) {
+    extras.splice(index, 1);
+    localStorage.setItem('extras-list', JSON.stringify(extras));
+    updateAll();
+}
+
+function toggle(id) {
+    const key = 'checked-' + id;
+    const cur = localStorage.getItem(key) === 'true';
+    localStorage.setItem(key, !cur);
+    updateAll();
+}
+
+function resetAll() {
+    if (confirm('Häkchen und alle Einkäufe löschen?')) {
+        fixData.forEach(item => localStorage.removeItem('checked-' + item.id));
+        extras = [];
+        localStorage.removeItem('extras-list');
+        updateAll();
+    }
+}
+
+function showTab(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+// init
+document.getElementById('date-picker').valueAsDate = new Date();
+updateAll();
+</script>
+
+</body>
+</html>
